@@ -37,6 +37,9 @@ const useTypeScript = fs.existsSync(paths.appTsConfig);
 // style files regexes
 const cssRegex = /\.css$/;
 const cssModuleRegex = /\.module\.css$/;
+const lessRegex = /\.less$/;
+const lessModuleRegex = /\.module\.less$/;
+
 const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
 
@@ -345,7 +348,7 @@ module.exports = function(webpackEnv) {
                         },
                       },
                     },
-                  ],
+                  ],["import", { libraryName: "antd-mobile", style: "css" }]
                 ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
@@ -362,7 +365,7 @@ module.exports = function(webpackEnv) {
               exclude: /@babel(?:\/|\\{1,2})runtime/,
               loader: require.resolve('babel-loader'),
               options: {
-                babelrc: false,
+                babelrc: true,
                 configFile: false,
                 compact: false,
                 presets: [
@@ -373,7 +376,6 @@ module.exports = function(webpackEnv) {
                 ],
                 cacheDirectory: true,
                 cacheCompression: isEnvProduction,
-                
                 // If an error happens in a package, it's possible to be
                 // because it was compiled. Thus, we don't want the browser
                 // debugger to show the original code. Instead, the code
@@ -390,7 +392,7 @@ module.exports = function(webpackEnv) {
             // By default we support CSS Modules with the extension .module.css
             {
               test: cssRegex,
-              exclude: cssModuleRegex,
+              exclude: [/src/],
               use: getStyleLoaders({
                 importLoaders: 1,
                 sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -401,6 +403,33 @@ module.exports = function(webpackEnv) {
               // See https://github.com/webpack/webpack/issues/6571
               sideEffects: true,
             },
+              {
+                  test: cssRegex,
+                  exclude: [/node_modules/],
+                  use: getStyleLoaders({
+                      importLoaders: 1,
+                      modules: true,
+                      localIdentName: "[name]__[local]___[hash:base64:5]",
+                  }),
+                  // Don't consider CSS imports dead code even if the
+                  // containing package claims to have no side effects.
+                  // Remove this when webpack adds a warning or an error for this.
+                  // See https://github.com/webpack/webpack/issues/6571
+                  sideEffects: true,
+              },
+              {
+                  test: lessRegex,
+                  exclude: lessModuleRegex,
+                  use: getStyleLoaders({
+                      importLoaders: 1,
+                      sourceMap: isEnvProduction && shouldUseSourceMap,
+                  }),
+                  // Don't consider CSS imports dead code even if the
+                  // containing package claims to have no side effects.
+                  // Remove this when webpack adds a warning or an error for this.
+                  // See https://github.com/webpack/webpack/issues/6571
+                  sideEffects: true,
+              },
             // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
             // using the extension .module.css
             {
